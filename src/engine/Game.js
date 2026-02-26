@@ -26,6 +26,8 @@ import { DecisionTracker } from '../tracking/DecisionTracker.js';
 import { SessionRecorder } from '../tracking/SessionRecorder.js';
 import { FLIQCalculator } from '../tracking/FLIQCalculator.js';
 import { LevelFactory } from '../levels/LevelFactory.js';
+import { Juice } from './Juice.js';
+import { ComboSystem } from './ComboSystem.js';
 import { updateFPS, getFPS, createDebugPanel, updateDebugPanel } from '../utils/debug.js';
 
 export class Game {
@@ -55,13 +57,29 @@ export class Game {
     this.cityGenerator = new CityGenerator(this.scene);
     this.skyGenerator = new SkyGenerator(this.scene);
 
-    // Lighting system
+    // Lighting system (renderer passed for bloom intensity control)
     this.lightingSystem = new LightingSystem(
-      this.sceneManager, this.skyGenerator, this.cityGenerator
+      this.sceneManager, this.skyGenerator, this.cityGenerator, this.renderer
     );
 
     // Particles
     this.particles = new Particle3D(this.scene);
+
+    // Game juice (screen shake, speed lines, popups)
+    const overlay_ref = document.getElementById('ui-overlay');
+    this.juice = new Juice(this.camera, overlay_ref);
+
+    // Combo system
+    this.combo = new ComboSystem();
+    this.combo.onMultiplierChange = (mult, label) => {
+      this.hud.showCombo(this.combo.getStreak(), mult, label);
+      this.audio.playSfx('combo_up');
+      this.juice.flash('#f5c54230', 0.2);
+    };
+    this.combo.onComboBreak = () => {
+      this.hud.hideCombo();
+      this.audio.playSfx('combo_break');
+    };
 
     // Player (will be created on character select)
     this.player = null;
@@ -200,31 +218,54 @@ export class Game {
           break;
         }
         if (this.player && this.currentLevel) {
+          // Apply time scale from juice (for slow-mo effects)
+          const effectiveDt = dt * this.juice.getTimeScale();
+
           // Update player
-          this.player.update(dt, this.input);
+          this.player.update(effectiveDt, this.input);
 
           // Update level (spawning, collisions)
-          this.currentLevel.update(dt, this.input);
+          this.currentLevel.update(effectiveDt, this.input);
+
+          // Update combo timer
+          this.combo.update(effectiveDt);
 
           // Update world generators
           this.groundGenerator.update(this.player.z);
           this.cityGenerator.update(this.player.z);
 
-          // Camera follow
-          this.cameraController.follow(this.player.x, this.player.y, this.player.z, dt);
+          // Camera follow with shake offset
+          this.cameraController.follow(this.player.x, this.player.y, this.player.z, effectiveDt);
+          const shakeOffset = this.juice.getCameraOffset();
+          this.camera.position.x += shakeOffset.x;
+          this.camera.position.y += shakeOffset.y;
+
+          // Dynamic FOV
+          this.camera.fov = this.juice.getCurrentFOV(CONFIG.camera.fov);
+          this.camera.updateProjectionMatrix();
 
           // Scene lighting
-          this.sceneManager.update(dt);
+          this.sceneManager.update(effectiveDt);
           this.sceneManager.updateShadowTarget(this.player.z);
 
           // Sky follows camera
           this.skyGenerator.update(this.camera.position);
 
-          // Lighting system
-          this.lightingSystem.update(dt);
+          // Lighting system + music restoration
+          this.lightingSystem.update(effectiveDt);
+          const restorationLevel = this.playerData.flow / 750;
+          this.audio.setRestorationLevel(Math.min(restorationLevel, 1));
+
+          // Speed lines based on player speed ratio
+          const speedRatio = (this.player.speed - CONFIG.runner.baseSpeed) /
+            (this.player.maxSpeed - CONFIG.runner.baseSpeed);
+          this.juice.showSpeedLines(Math.max(0, speedRatio * 0.6));
+
+          // Juice system
+          this.juice.update(effectiveDt);
 
           // Particles
-          this.particles.update(dt);
+          this.particles.update(effectiveDt);
 
           // Player shoe trail particles
           if (this.player.onGround && !this.player.isSliding) {
@@ -238,7 +279,8 @@ export class Game {
 
           // HUD updates
           this.hud.setFlow(this.playerData.flow);
-          this.hud.setRestoration(this.playerData.flow / 750);
+          this.hud.setRestoration(restorationLevel);
+          this.hud.setComboTimer(this.combo.getTimerRatio());
 
           // Check level complete
           if (this.currentLevel.complete) {
@@ -284,6 +326,8 @@ export class Game {
     this.titleScreen.hide();
     this.state = 'CHARACTER_SELECT';
     this.characterSelect.show();
+    // Start ambient music
+    this.audio.startMusic();
   }
 
   onCharacterSelected(characterId) {
@@ -352,6 +396,10 @@ export class Game {
 
     this.state = 'PLAYING';
 
+    // Reset combo for new level
+    this.combo.reset();
+    this.hud.hideCombo();
+
     this.tracking.record({
       type: 'LEVEL_START',
       level: index + 1,
@@ -413,7 +461,8 @@ export class Game {
 
     // Show score screen
     this.scoreScreen.showScore(fliqResult);
-    this.audio.playSfx('level_complete');
+    this.audio.playSfx('celebration');
+    this.juice.hideSpeedLines();
   }
 
   onPlayAgain() {
@@ -432,6 +481,11 @@ export class Game {
     // Clean up world
     this.groundGenerator.dispose();
     this.cityGenerator.dispose();
+
+    // Stop music and clean up juice
+    this.audio.stopMusic();
+    this.juice.hideSpeedLines();
+    this.combo.reset();
 
     // Back to title
     this.state = 'TITLE';

@@ -162,6 +162,52 @@ export class HUD {
     `;
     this.element.appendChild(this.levelName);
 
+    // Combo counter (bottom center, hidden by default)
+    this.comboEl = document.createElement('div');
+    this.comboEl.style.cssText = `
+      position: absolute; bottom: 12%; left: 50%;
+      transform: translateX(-50%);
+      display: none;
+      flex-direction: column; align-items: center;
+      pointer-events: none;
+      z-index: 22;
+    `;
+    // Combo streak number
+    this.comboCount = document.createElement('div');
+    this.comboCount.style.cssText = `
+      font-size: 2rem; font-weight: 900;
+      color: #FFD700;
+      text-shadow: 0 0 15px rgba(245,166,35,0.6), 0 2px 4px rgba(0,0,0,0.5);
+      line-height: 1;
+    `;
+    this.comboEl.appendChild(this.comboCount);
+    // Combo label
+    this.comboLabel = document.createElement('div');
+    this.comboLabel.style.cssText = `
+      font-size: 0.85rem; font-weight: 700;
+      color: rgba(255,255,255,0.7);
+      text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+      letter-spacing: 0.08em;
+    `;
+    this.comboEl.appendChild(this.comboLabel);
+    // Combo timer bar
+    this.comboTimerBar = document.createElement('div');
+    this.comboTimerBar.style.cssText = `
+      width: 80px; height: 3px; margin-top: 4px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 2px; overflow: hidden;
+    `;
+    this.comboTimerFill = document.createElement('div');
+    this.comboTimerFill.style.cssText = `
+      height: 100%; width: 100%;
+      background: linear-gradient(90deg, #F5A623, #FFD700);
+      border-radius: 2px;
+      transition: width 0.1s linear;
+    `;
+    this.comboTimerBar.appendChild(this.comboTimerFill);
+    this.comboEl.appendChild(this.comboTimerBar);
+    this.element.appendChild(this.comboEl);
+
     this.overlay.appendChild(this.element);
   }
 
@@ -269,6 +315,26 @@ export class HUD {
     flash.textContent = symbol;
     this.element.appendChild(flash);
     setTimeout(() => flash.remove(), 800);
+  }
+
+  // Show combo counter
+  showCombo(streak, multiplier, label) {
+    this.comboCount.textContent = `${streak}x`;
+    this.comboLabel.textContent = label || `x${multiplier}`;
+    this.comboEl.style.display = 'flex';
+    // Pop animation
+    this.comboCount.style.transform = 'scale(1.3)';
+    setTimeout(() => { this.comboCount.style.transform = 'scale(1)'; }, 150);
+  }
+
+  hideCombo() {
+    this.comboEl.style.display = 'none';
+  }
+
+  setComboTimer(ratio) {
+    if (this.comboTimerFill) {
+      this.comboTimerFill.style.width = (ratio * 100) + '%';
+    }
   }
 
   // Decision feedback flash

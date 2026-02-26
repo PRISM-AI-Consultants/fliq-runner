@@ -175,8 +175,10 @@ export class LevelBase {
       level: this.config.id,
     });
 
-    // Show decision UI
+    // Show decision UI with juice effects
     fork.promptShownAt = Date.now();
+    this.game.audio.playSfx('decision_appear');
+    this.game.juice.timeSlowStart(0.5);
     this.game.decisionUI.showDecision(allDecisions, (choice) => {
       this._resolveDecision(fork, choice);
     });
@@ -270,9 +272,30 @@ export class LevelBase {
     this.game.hud.flashDecision(isPositive);
     this.game.audio.playSfx(isPositive ? 'good_decision' : 'bad_decision');
 
+    // Combo tracking for decisions
+    if (isPositive) {
+      this.game.combo.addGood();
+    } else {
+      this.game.combo.addBad();
+    }
+
     // Particle burst at player position
     const color = isPositive ? 0x2ecc71 : 0xe74c3c;
     this.game.particles.burst(player.x, player.y + 1, player.z, color, 15, 4);
+
+    // Juice effects
+    const impactAmount = option.riskOutcome ? actualFlowImpact : option.flowImpact;
+    const popColor = isPositive ? '#2ecc71' : '#e74c3c';
+    const prefix = impactAmount >= 0 ? '+' : '';
+    this.game.juice.scorePopup(player.x, player.y + 1.5, player.z, `${prefix}${impactAmount}`, popColor, this.game.camera);
+    this.game.juice.shake(isPositive ? 0.15 : 0.3, 0.15);
+    this.game.juice.fovPunch(isPositive ? 3 : 5, 0.2);
+    this.game.juice.flash(isPositive ? '#2ecc7130' : '#e74c3c30', 0.2);
+
+    // Player character reaction
+    if (isPositive) {
+      player.celebrate();
+    }
 
     // Hide decision UI
     this.game.decisionUI.hide();
@@ -382,17 +405,26 @@ export class LevelBase {
     this.coins.forEach(coin => {
       if (!coin.collected && Collision.checkProximity(player, coin, coin.collectRadius)) {
         coin.collect();
-        this.game.playerData.flow += coin.value;
+        // Apply combo multiplier
+        const mult = this.game.combo.getMultiplier();
+        const value = Math.round(coin.value * mult);
+        this.game.playerData.flow += value;
         this.game.playerData.coins++;
         this.coinsCollected++;
-        this.flowEarned += coin.value;
+        this.flowEarned += value;
         this.game.hud.setCoins(this.game.playerData.coins);
-        this.game.audio.playSfx('coin');
+        this.game.audio.playSfx('coin', { combo: this.game.combo.getStreak() });
         this.game.particles.burst(coin.x, coin.y, coin.z, 0xffd700, 6, 2);
+        this.game.combo.addGood();
+
+        // Juice: score popup + small shake
+        const popText = mult > 1 ? `+${value} x${mult}` : `+${value}`;
+        this.game.juice.scorePopup(coin.x, coin.y + 0.5, coin.z, popText, '#FFD700', this.game.camera);
 
         this.game.tracking.record({
           type: 'COIN_COLLECTED',
-          value: coin.value,
+          value: value,
+          multiplier: mult,
           playerFlow: this.game.playerData.flow,
         });
       }
@@ -406,6 +438,12 @@ export class LevelBase {
         this.flowEarned += fp.value;
         this.game.audio.playSfx('flow_pickup');
         this.game.particles.burst(fp.x, fp.y, fp.z, 0xf5c542, 15, 4);
+        this.game.combo.addGood();
+
+        // Juice: big score popup + shake + FOV punch
+        this.game.juice.scorePopup(fp.x, fp.y + 0.5, fp.z, `+${fp.value}`, '#f5c542', this.game.camera);
+        this.game.juice.shake(0.2, 0.12);
+        this.game.juice.fovPunch(3, 0.2);
 
         this.game.tracking.record({
           type: 'FLOW_COLLECTED',
@@ -424,6 +462,11 @@ export class LevelBase {
         this.flowEarned += dp.value;
         this.game.audio.playSfx('bad_decision');
         this.game.particles.burst(dp.x, dp.y, dp.z, 0xe74c3c, 8, 2);
+        this.game.combo.addBad();
+
+        // Juice: negative popup + red flash
+        this.game.juice.scorePopup(dp.x, dp.y + 0.5, dp.z, `${dp.value}`, '#e74c3c', this.game.camera);
+        this.game.juice.flash('#e74c3c30', 0.15);
 
         this.game.tracking.record({
           type: 'DRAIN_COLLECTED',
@@ -448,6 +491,12 @@ export class LevelBase {
           this.flowEarned += CONFIG.flow.obstacleHit;
           this.game.audio.playSfx('obstacle_hit');
           this.game.sessionRecorder.addObstacleHit();
+          this.game.combo.addBad();
+
+          // Juice: screen shake + red flash + FOV punch
+          this.game.juice.shake(0.4, 0.2);
+          this.game.juice.fovPunch(5, 0.25);
+          this.game.juice.flash('#e74c3c40', 0.2);
 
           // Fail obstacle navigation tracker if active
           if (this.obstacleNavTracker && !this.obstacleNavTracker.failed) {

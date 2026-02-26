@@ -3,7 +3,7 @@
 // OPTIMIZED: reduced draw calls, no point lights, shared materials, fewer shadow casters
 import * as THREE from 'three';
 import { CONFIG } from '../config.js';
-import { randomRange } from '../utils/math.js';
+import { randomRange, lerp } from '../utils/math.js';
 
 // Shared materials (one instance each, never cloned unless needed for emissive changes)
 const BRICK_COLORS = [0x8b4513, 0xa0522d, 0x7b3f2e, 0x9c5a3c, 0x6b3a2a, 0xb8786e];
@@ -218,16 +218,83 @@ export class CityGenerator {
     return treeGroup;
   }
 
-  // Update streetlight brightness based on restoration level
+  // Update city visuals based on restoration level (0-1)
+  // This is the EMOTIONAL CORE - dark/grey/dead city to warm/bright/alive
   setRestorationLevel(ratio) {
-    const baseGlow = 0.3;
+    // --- Streetlight beam intensity ---
+    const baseGlow = 0.1;
+    const fullGlow = 1.2;
     this.lampMeshes.forEach((light, i) => {
       const threshold = (i % 8) / 8;
       const isOn = ratio > threshold;
       if (light.userData.lampMat) {
-        light.userData.lampMat.emissiveIntensity = isOn ? 0.9 : baseGlow;
+        if (isOn) {
+          // Glow scales with restoration - brighter as city comes alive
+          const glowIntensity = lerp(0.4, fullGlow, ratio);
+          light.userData.lampMat.emissiveIntensity = glowIntensity;
+          // Warm color shift at high restoration (>0.7): cool white -> warm gold
+          if (ratio > 0.7) {
+            const warmth = (ratio - 0.7) / 0.3; // 0-1 within the 0.7-1.0 range
+            light.userData.lampMat.emissive.setRGB(
+              lerp(0.96, 1.0, warmth),   // r
+              lerp(0.77, 0.85, warmth),   // g
+              lerp(0.26, 0.35, warmth)    // b - slightly warmer gold
+            );
+          }
+        } else {
+          light.userData.lampMat.emissiveIntensity = baseGlow;
+        }
       }
     });
+
+    // --- Building material saturation shift ---
+    // Low restoration: desaturated grey. High restoration: warm, colorful brick
+    const desatAmount = 1.0 - ratio; // 1.0 at ratio=0, 0.0 at ratio=1
+    const grey = new THREE.Color(0.45, 0.42, 0.40); // neutral warm grey
+    BRICK_MATS.forEach((mat, i) => {
+      const saturated = new THREE.Color(BRICK_COLORS[i]);
+      const blended = saturated.clone().lerp(grey, desatAmount * 0.7);
+      mat.color.copy(blended);
+    });
+
+    // --- Awning vibrancy ---
+    // Low restoration: dim, muted awnings. High restoration: vivid + subtle emissive glow
+    AWNING_MATS.forEach((mat, i) => {
+      const saturated = new THREE.Color(AWNING_COLORS[i]);
+      const muted = saturated.clone().lerp(grey, desatAmount * 0.8);
+      mat.color.copy(muted);
+      // Awnings gain a subtle emissive glow as city restores (like lit signage)
+      mat.emissive = mat.emissive || new THREE.Color(0x000000);
+      mat.emissive.copy(saturated).multiplyScalar(0.15);
+      mat.emissiveIntensity = ratio > 0.3 ? lerp(0, 0.6, (ratio - 0.3) / 0.7) : 0;
+    });
+
+    // --- Window glow intensification ---
+    // Lit windows get BRIGHTER as restoration increases, not just more of them
+    SHARED.window_lit.emissiveIntensity = lerp(0.2, 1.0, ratio);
+    // Also warm up the window color slightly at high restoration
+    const windowWarmBase = new THREE.Color(0xffe4b5);
+    const windowWarmFull = new THREE.Color(0xfff0d0);
+    SHARED.window_lit.emissive.copy(windowWarmBase).lerp(windowWarmFull, ratio);
+    SHARED.window_lit.color.copy(windowWarmBase).lerp(windowWarmFull, ratio);
+
+    // Dark windows get slightly less dead at high restoration (ambient light spill)
+    SHARED.window_dark.emissive = SHARED.window_dark.emissive || new THREE.Color(0x000000);
+    SHARED.window_dark.emissiveIntensity = ratio > 0.5 ? lerp(0, 0.08, (ratio - 0.5) / 0.5) : 0;
+    if (ratio > 0.5) {
+      SHARED.window_dark.emissive.setHex(0x1a1830);
+    }
+
+    // --- Tree leaves vibrancy ---
+    // Leaves go from dull grey-green to lush vibrant green
+    const dullLeaves = new THREE.Color(0x3a5a30);
+    const lushLeaves = new THREE.Color(0x4a7c3f);
+    SHARED.tree_leaves.color.copy(dullLeaves).lerp(lushLeaves, ratio);
+
+    // --- Roof warmth ---
+    const coldRoof = new THREE.Color(0x3a2e22);
+    const warmRoof = new THREE.Color(0x4a3728);
+    SHARED.roof.color.copy(coldRoof).lerp(warmRoof, ratio);
   }
 
   // Update visible segments
