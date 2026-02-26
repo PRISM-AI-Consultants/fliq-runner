@@ -81,7 +81,7 @@ export const CONFIG = {
 
   // Session / Levels
   session: {
-    levelsPerSession: 3,
+    levelsPerSession: 10,
     levelDuration: [90, 180], // 1.5 to 3 minutes per level in seconds
   },
 

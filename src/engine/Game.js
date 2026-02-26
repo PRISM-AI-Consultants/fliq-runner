@@ -20,6 +20,7 @@ import { TitleScreen } from '../ui/TitleScreen.js';
 import { CharacterSelect } from '../ui/CharacterSelect.js';
 import { FLIQScoreScreen } from '../ui/FLIQScoreScreen.js';
 import { LevelTransition } from '../ui/LevelTransition.js';
+import { Tutorial } from '../ui/Tutorial.js';
 import { TrackingEngine } from '../tracking/TrackingEngine.js';
 import { DecisionTracker } from '../tracking/DecisionTracker.js';
 import { SessionRecorder } from '../tracking/SessionRecorder.js';
@@ -86,6 +87,7 @@ export class Game {
     this.characterSelect = new CharacterSelect(overlay, (id) => this.onCharacterSelected(id));
     this.scoreScreen = new FLIQScoreScreen(overlay, () => this.onPlayAgain());
     this.levelTransition = new LevelTransition(overlay);
+    this.tutorial = new Tutorial(overlay, () => this.onTutorialComplete());
 
     // Level
     this.currentLevel = null;
@@ -293,7 +295,19 @@ export class Game {
     // Snap camera
     this.cameraController.snapTo(0, 0, 0);
 
-    // Start level 1
+    // Show tutorial (skips automatically if already seen)
+    const shown = this.tutorial.show();
+    if (!shown) {
+      this._beginFirstLevel();
+    }
+  }
+
+  onTutorialComplete() {
+    this.tutorial.hide();
+    this._beginFirstLevel();
+  }
+
+  _beginFirstLevel() {
     this.currentLevelIndex = 0;
     this._startLevel(0);
   }
@@ -413,9 +427,16 @@ export class Game {
 
   _getLevelNarrative(levelIndex) {
     const narratives = [
-      'The first lights flicker on! Your choices are bringing energy back to Velo City. The streets are waking up...',
-      'More of the city is coming alive! Storefronts glow with warm light. Your smart decisions are making a difference!',
-      'Velo City shines bright! Every choice you made helped restore the Flow. The city was waiting for someone like you!',
+      'The first lights flicker on! Your choices are bringing energy back to Velo City...',
+      'More streets are waking up! Storefronts glow with warm light...',
+      'The city is gaining momentum! Your smart decisions are making a real difference!',
+      'Market Day is buzzing! You learned how to make your coins count...',
+      'You found shortcuts, but also learned when the safe path is smarter!',
+      'Helping hands make strong communities! The city thanks you...',
+      'Budget Boss moves! You know how to plan and save like a pro!',
+      'Smart Streets ahead! Every corner of Velo City feels your energy!',
+      'The Big Choices are behind you - and you made them count!',
+      'Velo City shines bright! Every choice you made helped restore the Flow!',
     ];
     return narratives[levelIndex] || narratives[narratives.length - 1];
   }

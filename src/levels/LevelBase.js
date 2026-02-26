@@ -10,6 +10,7 @@ import { DecisionFork } from '../entities/DecisionFork.js';
 import { Collision } from '../engine/Collision.js';
 import { getRandomDecision } from '../data/decisions.js';
 import { randomRange, randomInt } from '../utils/math.js';
+import { NPC } from '../entities/NPC.js';
 
 export class LevelBase {
   constructor(game, config) {
@@ -38,6 +39,16 @@ export class LevelBase {
     this.complete = false;
     this.activeDecision = null;
 
+    // Delayed rewards tracking
+    this.pendingRewards = [];
+    this.delayedRewardDeliveryRange = [5, 10]; // seconds
+
+    // NPC entities
+    this.npcs = [];
+
+    // Obstacle navigation tracking (for requiresObstacleNav)
+    this.obstacleNavTracker = null; // { obstaclesCleared: 0, reward: N, failed: false }
+
     // Set player speed for this level
     this.game.player.setSpeed(config.baseSpeed, config.maxSpeed);
   }
@@ -54,6 +65,9 @@ export class LevelBase {
 
     // Update entities
     this._updateEntities(dt);
+
+    // Update pending delayed rewards
+    this._updatePendingRewards(dt);
 
     // Check collisions
     this._checkCollisions(player);
@@ -174,9 +188,62 @@ export class LevelBase {
 
     const responseTime = Date.now() - fork.promptShownAt;
 
-    // Apply flow impact
-    this.game.playerData.flow += option.flowImpact;
-    this.flowEarned += option.flowImpact;
+    // --- Risk Outcome mechanic ---
+    let actualFlowImpact = option.flowImpact;
+    let riskRolled = null;
+    if (option.riskOutcome) {
+      const roll = Math.random();
+      riskRolled = roll;
+      if (roll < option.riskOutcome.good) {
+        actualFlowImpact = option.riskOutcome.goodReward;
+      } else {
+        actualFlowImpact = option.riskOutcome.badPenalty;
+      }
+    }
+
+    // --- Delayed Reward mechanic ---
+    if (option.delayedReward) {
+      const delay = randomRange(...this.delayedRewardDeliveryRange);
+      const pending = {
+        reward: option.delayedReward,
+        timeRemaining: delay,
+        requiresObstacleNav: !!option.requiresObstacleNav,
+        decisionId: fork.decision.id,
+      };
+      this.pendingRewards.push(pending);
+
+      // If this reward requires obstacle navigation, start tracking
+      if (option.requiresObstacleNav) {
+        this.obstacleNavTracker = {
+          obstaclesCleared: 0,
+          required: 3,
+          reward: option.delayedReward,
+          pendingRef: pending,
+          failed: false,
+        };
+      }
+
+      // Show HUD indicator for pending reward
+      this.game.hud.showPendingReward(option.delayedReward);
+
+      // Don't apply the delayed reward now - it comes later
+      // Still apply the immediate flowImpact (which may be 0)
+    }
+
+    // --- NPC spawning for sharing/generosity decisions ---
+    if (fork.decision.category === 'sharing') {
+      this._spawnNPC(fork.z, player);
+    }
+
+    // Apply flow impact (may be 0 for delayed reward options, or risk-adjusted)
+    if (!option.delayedReward) {
+      this.game.playerData.flow += actualFlowImpact;
+      this.flowEarned += actualFlowImpact;
+    } else {
+      // For delayed reward options, only apply the base flowImpact (often 0)
+      this.game.playerData.flow += option.flowImpact;
+      this.flowEarned += option.flowImpact;
+    }
 
     // Track the decision
     this.game.tracking.record({
@@ -185,16 +252,18 @@ export class LevelBase {
       category: fork.decision.category,
       choice: uiChoice,
       optionChosen: option,
-      flowImpact: option.flowImpact,
+      flowImpact: option.riskOutcome ? actualFlowImpact : option.flowImpact,
       fliqDimension: option.fliqDimension,
       fliqWeight: option.fliqWeight,
+      riskRoll: riskRolled,
+      delayedReward: option.delayedReward || null,
       responseTimeMs: responseTime,
       playerFlow: this.game.playerData.flow,
       level: this.config.id,
     });
 
-    // Visual feedback
-    const isPositive = option.flowImpact > 0;
+    // Visual feedback (use actual impact for risk decisions)
+    const isPositive = option.riskOutcome ? actualFlowImpact > 0 : option.flowImpact > 0;
     this.game.hud.flashDecision(isPositive);
     this.game.audio.playSfx(isPositive ? 'good_decision' : 'bad_decision');
 
@@ -218,6 +287,16 @@ export class LevelBase {
     this.obstacles = this.obstacles.filter(obs => {
       obs.update(dt);
       if (obs.z > cullZ) {
+        // Obstacle passed behind player - count as dodged for nav tracker
+        if (this.obstacleNavTracker && !this.obstacleNavTracker.failed) {
+          this.obstacleNavTracker.obstaclesCleared++;
+          if (this.obstacleNavTracker.obstaclesCleared >= this.obstacleNavTracker.required) {
+            // Navigation challenge complete - reward will be delivered by _updatePendingRewards
+            this.obstacleNavTracker.pendingRef.requiresObstacleNav = false; // Clear the gate
+            this.game.hud.flashPendingRewardSuccess();
+            this.obstacleNavTracker = null;
+          }
+        }
         obs.removeFromScene(this.game.scene);
         obs.dispose();
         return false;
@@ -253,6 +332,17 @@ export class LevelBase {
       if (dp.collected || dp.z > cullZ) {
         dp.removeFromScene(this.game.scene);
         dp.dispose();
+        return false;
+      }
+      return true;
+    });
+
+    // Update and cull NPCs
+    this.npcs = this.npcs.filter(npc => {
+      npc.update(dt);
+      if (npc.collected || npc.z > cullZ) {
+        npc.removeFromScene(this.game.scene);
+        npc.dispose();
         return false;
       }
       return true;
@@ -356,6 +446,13 @@ export class LevelBase {
           this.game.audio.playSfx('obstacle_hit');
           this.game.sessionRecorder.addObstacleHit();
 
+          // Fail obstacle navigation tracker if active
+          if (this.obstacleNavTracker && !this.obstacleNavTracker.failed) {
+            this.obstacleNavTracker.failed = true;
+            this.obstacleNavTracker.pendingRef.requiresObstacleNav = false; // Will deliver reduced/no reward
+            this.game.hud.flashPendingRewardFailed();
+          }
+
           this.game.tracking.record({
             type: 'OBSTACLE_HIT',
             obstacleType: obs.type,
@@ -371,9 +468,74 @@ export class LevelBase {
     this.game.lightingSystem.setFlow(this.game.playerData.flow);
   }
 
+  _updatePendingRewards(dt) {
+    this.pendingRewards = this.pendingRewards.filter(pending => {
+      pending.timeRemaining -= dt;
+
+      if (pending.timeRemaining <= 0) {
+        // Time's up - deliver reward if conditions met
+        if (pending.requiresObstacleNav) {
+          // Still gated by obstacle navigation - not delivered (player didn't clear enough)
+          this.game.hud.hidePendingReward(pending.decisionId);
+          this.game.tracking.record({
+            type: 'DELAYED_REWARD_EXPIRED',
+            decisionId: pending.decisionId,
+            reward: pending.reward,
+            reason: 'obstacle_nav_incomplete',
+          });
+          return false;
+        }
+
+        // Deliver the reward
+        this.game.playerData.flow += pending.reward;
+        this.flowEarned += pending.reward;
+        this.game.hud.setFlow(this.game.playerData.flow);
+        this.game.hud.hidePendingReward(pending.decisionId);
+        this.game.audio.playSfx('flow_pickup');
+        this.game.lightingSystem.setFlow(this.game.playerData.flow);
+
+        // Visual burst at player position
+        const player = this.game.player;
+        this.game.particles.burst(player.x, player.y + 1, player.z, 0x4ecdc4, 20, 5);
+
+        this.game.tracking.record({
+          type: 'DELAYED_REWARD_DELIVERED',
+          decisionId: pending.decisionId,
+          reward: pending.reward,
+          playerFlow: this.game.playerData.flow,
+        });
+
+        return false; // Remove from pending
+      }
+      return true; // Keep tracking
+    });
+  }
+
+  _spawnNPC(decisionZ, player) {
+    // Spawn NPC on the sidewalk near the decision point
+    const types = ['child', 'elder', 'friend', 'vendor'];
+    const type = types[Math.floor(Math.random() * types.length)];
+    const sidewalkOffset = player.lane <= 1 ? 4.5 : -4.5; // Opposite side from player
+    const npc = new NPC(type, sidewalkOffset);
+    npc.x = sidewalkOffset;
+    npc.z = decisionZ + 2;
+    npc.syncMeshPosition();
+    npc.addToScene(this.game.scene);
+    this.npcs.push(npc);
+  }
+
   completeLevelGracefully() {
     if (this.complete) return;
     this.complete = true;
+
+    // Deliver any remaining pending delayed rewards
+    this.pendingRewards.forEach(pending => {
+      if (!pending.requiresObstacleNav) {
+        this.game.playerData.flow += pending.reward;
+        this.flowEarned += pending.reward;
+      }
+    });
+    this.pendingRewards = [];
 
     // Level complete bonus
     this.game.playerData.flow += CONFIG.flow.levelComplete;
@@ -400,7 +562,7 @@ export class LevelBase {
   }
 
   dispose() {
-    [...this.obstacles, ...this.coins, ...this.flowPickups, ...this.drainPickups, ...this.decisionForks]
+    [...this.obstacles, ...this.coins, ...this.flowPickups, ...this.drainPickups, ...this.decisionForks, ...this.npcs]
       .forEach(entity => {
         entity.removeFromScene(this.game.scene);
         entity.dispose();

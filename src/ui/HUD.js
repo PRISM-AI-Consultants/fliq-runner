@@ -185,6 +185,67 @@ export class HUD {
     }, 2500);
   }
 
+  // Pending reward indicator (delayed gratification)
+  showPendingReward(amount) {
+    if (!this._pendingRewardEl) {
+      this._pendingRewardEl = document.createElement('div');
+      this._pendingRewardEl.style.cssText = `
+        position: absolute; top: 50px; right: 16px;
+        display: flex; align-items: center; gap: 6px;
+        background: rgba(0,0,0,0.6);
+        border: 1px solid rgba(245,197,66,0.5);
+        border-radius: 12px;
+        padding: 6px 12px;
+        animation: hudPendingPulse 1.5s ease-in-out infinite;
+      `;
+      // Add animation keyframes if not already added
+      if (!document.getElementById('hud-pending-style')) {
+        const style = document.createElement('style');
+        style.id = 'hud-pending-style';
+        style.textContent = `
+          @keyframes hudPendingPulse { 0%,100% { opacity: 0.7; } 50% { opacity: 1; } }
+          @keyframes hudFlash { 0% { opacity: 1; } 100% { opacity: 0; } }
+        `;
+        document.head.appendChild(style);
+      }
+      this.element.appendChild(this._pendingRewardEl);
+    }
+    this._pendingRewardEl.innerHTML = `
+      <span style="font-size:16px;">⏳</span>
+      <span style="color:#FFD700;font-size:13px;font-weight:700;">+${amount}</span>
+    `;
+    this._pendingRewardEl.style.display = 'flex';
+  }
+
+  hidePendingReward() {
+    if (this._pendingRewardEl) {
+      this._pendingRewardEl.style.display = 'none';
+    }
+  }
+
+  flashPendingRewardSuccess() {
+    this._flashPendingReward('#2ecc71', '✓');
+  }
+
+  flashPendingRewardFailed() {
+    this._flashPendingReward('#e74c3c', '✗');
+  }
+
+  _flashPendingReward(color, symbol) {
+    if (!this._pendingRewardEl) return;
+    const flash = document.createElement('div');
+    flash.style.cssText = `
+      position: absolute; top: 45px; right: 16px;
+      color: ${color}; font-size: 24px; font-weight: 900;
+      text-shadow: 0 0 10px ${color};
+      animation: hudFlash 0.8s ease-out forwards;
+      pointer-events: none;
+    `;
+    flash.textContent = symbol;
+    this.element.appendChild(flash);
+    setTimeout(() => flash.remove(), 800);
+  }
+
   // Decision feedback flash
   flashDecision(isPositive) {
     const flash = document.createElement('div');
