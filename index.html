@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>FLIQ Runner - WealthWise Kids</title>
+  <meta name="description" content="FLIQ Runner - A WealthWise Kids financial literacy game">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="theme-color" content="#F5A623">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #1a1020;
+      font-family: 'Nunito', 'Segoe UI', system-ui, -apple-system, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    #game-canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+    #ui-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 10;
+    }
+    #ui-overlay > * {
+      pointer-events: auto;
+    }
+    #loading-screen {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: linear-gradient(135deg, #1a1020 0%, #2d1b3e 50%, #1a1020 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      transition: opacity 0.5s ease;
+    }
+    #loading-screen.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+    .loading-title {
+      font-size: 2.5rem;
+      font-weight: 800;
+      color: #F5A623;
+      text-shadow: 0 0 20px rgba(245, 166, 35, 0.4);
+      margin-bottom: 1rem;
+      letter-spacing: 0.1em;
+    }
+    .loading-bar-container {
+      width: 200px;
+      height: 6px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+    .loading-bar {
+      height: 100%;
+      background: linear-gradient(90deg, #F5A623, #FFD700);
+      border-radius: 3px;
+      width: 0%;
+      transition: width 0.3s ease;
+    }
+  </style>
+</head>
+<body>
+  <div id="loading-screen">
+    <div class="loading-title">FLIQ RUNNER</div>
+    <div class="loading-bar-container">
+      <div class="loading-bar" id="loading-bar"></div>
+    </div>
+  </div>
+  <canvas id="game-canvas"></canvas>
+  <div id="ui-overlay"></div>
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>
