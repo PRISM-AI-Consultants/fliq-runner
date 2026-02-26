@@ -40,6 +40,10 @@ export class Input {
       this.setupTouchControls();
     }
 
+    // Pause (edge-triggered)
+    this._pauseWasDown = false;
+    this._pauseJustPressed = false;
+
     // Also support tap zones on mobile
     this._tapAction = null;
   }
@@ -109,6 +113,11 @@ export class Input {
     this._slideJustPressed = slideDown && !this._slideWasDown;
     this._slideWasDown = slideDown;
 
+    // Pause (edge-triggered)
+    const pauseDown = this.keys['Escape'] || this.keys['KeyP'];
+    this._pauseJustPressed = pauseDown && !this._pauseWasDown;
+    this._pauseWasDown = pauseDown;
+
     // Process swipe as edge-triggered (consume after one frame)
     if (this.swipeDirection === 'left') {
       this._leftJustPressed = true;
@@ -150,8 +159,8 @@ export class Input {
     return this._jumpJustPressed || this.keys['Enter'] || this.keys['Space'];
   }
 
-  // Pause
+  // Pause (edge-triggered - true only on first frame)
   get pausePressed() {
-    return this.keys['Escape'] || this.keys['KeyP'];
+    return this._pauseJustPressed;
   }
 }

@@ -1,6 +1,6 @@
 // Master game class - orchestrates the entire game loop
 // Fixed-timestep pattern ported from Max the Flying Chicken Game.js
-// State machine: TITLE -> CHARACTER_SELECT -> PLAYING -> LEVEL_TRANSITION -> SCORE
+// State machine: TITLE -> CHARACTER_SELECT -> PLAYING -> PAUSED -> LEVEL_TRANSITION -> SCORE
 
 import { CONFIG } from '../config.js';
 import { Renderer } from './Renderer.js';
@@ -82,19 +82,21 @@ export class Game {
     // UI
     const overlay = document.getElementById('ui-overlay');
     this.hud = new HUD(overlay);
+    this.hud.onPause = () => { if (this.state === 'PLAYING') this._pause(); };
     this.decisionUI = new DecisionUI(overlay);
     this.titleScreen = new TitleScreen(overlay, () => this.onTitleStart());
     this.characterSelect = new CharacterSelect(overlay, (id) => this.onCharacterSelected(id));
     this.scoreScreen = new FLIQScoreScreen(overlay, () => this.onPlayAgain());
     this.levelTransition = new LevelTransition(overlay);
     this.tutorial = new Tutorial(overlay, () => this.onTutorialComplete());
+    this.pauseOverlay = this._createPauseOverlay(overlay);
 
     // Level
     this.currentLevel = null;
     this.currentLevelIndex = 0;
 
     // Game state
-    this.state = 'LOADING'; // LOADING, TITLE, CHARACTER_SELECT, PLAYING, LEVEL_TRANSITION, SCORE
+    this.state = 'LOADING'; // LOADING, TITLE, CHARACTER_SELECT, PLAYING, PAUSED, LEVEL_TRANSITION, SCORE
     this.fadeAlpha = 0;
     this.fadeDirection = 0;
     this.fadeSpeed = 2.5;
@@ -192,6 +194,11 @@ export class Game {
         break;
 
       case 'PLAYING':
+        // Check for pause
+        if (this.input.pausePressed) {
+          this._pause();
+          break;
+        }
         if (this.player && this.currentLevel) {
           // Update player
           this.player.update(dt, this.input);
@@ -237,6 +244,12 @@ export class Game {
           if (this.currentLevel.complete) {
             this._onLevelComplete();
           }
+        }
+        break;
+
+      case 'PAUSED':
+        if (this.input.pausePressed) {
+          this._resume();
         }
         break;
 
@@ -445,5 +458,67 @@ export class Game {
     this.fadeDirection = 1;
     this.fadeAlpha = 0;
     this.fadeCallback = callback;
+  }
+
+  // === Pause System ===
+
+  _createPauseOverlay(overlay) {
+    const el = document.createElement('div');
+    el.id = 'pause-overlay';
+    el.style.cssText = `
+      position: absolute; inset: 0;
+      background: rgba(10, 5, 20, 0.75);
+      display: none;
+      flex-direction: column;
+      align-items: center; justify-content: center;
+      z-index: 50;
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+    `;
+
+    // Pause icon
+    const icon = document.createElement('div');
+    icon.style.cssText = `font-size: 4rem; margin-bottom: 16px;`;
+    icon.textContent = '\u23F8\uFE0F';
+    el.appendChild(icon);
+
+    // "Paused" label
+    const label = document.createElement('div');
+    label.style.cssText = `
+      color: #f5c542; font-size: 2rem; font-weight: 700;
+      margin-bottom: 24px; letter-spacing: 2px;
+    `;
+    label.textContent = 'PAUSED';
+    el.appendChild(label);
+
+    // Resume button
+    const resumeBtn = document.createElement('button');
+    resumeBtn.style.cssText = `
+      background: linear-gradient(135deg, #f5c542, #f5a623);
+      border: none; border-radius: 30px;
+      color: #1a0e2e; font-size: 1.3rem; font-weight: 700;
+      padding: 14px 40px; cursor: pointer;
+      transition: transform 0.15s ease;
+    `;
+    resumeBtn.textContent = 'Resume';
+    resumeBtn.addEventListener('pointerenter', () => resumeBtn.style.transform = 'scale(1.05)');
+    resumeBtn.addEventListener('pointerleave', () => resumeBtn.style.transform = 'scale(1)');
+    resumeBtn.addEventListener('click', () => this._resume());
+    el.appendChild(resumeBtn);
+
+    overlay.appendChild(el);
+    return el;
+  }
+
+  _pause() {
+    this.state = 'PAUSED';
+    this.pauseOverlay.style.display = 'flex';
+    this.audio.playSfx('ui_select');
+  }
+
+  _resume() {
+    this.state = 'PLAYING';
+    this.pauseOverlay.style.display = 'none';
+    this.audio.playSfx('ui_select');
   }
 }

@@ -153,8 +153,11 @@ export class LevelBase {
     const category = categories[Math.floor(Math.random() * categories.length)];
 
     // Find a decision matching this category
-    const allDecisions = getRandomDecision(this.config.id, this.usedDecisionIds);
-    if (!allDecisions) return;
+    const allDecisions = getRandomDecision(this.usedDecisionIds, category);
+    if (!allDecisions) {
+      console.warn('No available decision for category:', category);
+      return;
+    }
 
     const fork = new DecisionFork(allDecisions, z);
     fork.addToScene(this.game.scene);

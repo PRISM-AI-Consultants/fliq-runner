@@ -3,6 +3,13 @@
 // This is the CORE mechanic for FLIQ data collection
 import * as THREE from 'three';
 import { Entity3D } from './Entity3D.js';
+import { CATEGORIES } from '../data/decisions.js';
+
+// Category-based glow colors (used when decision options don't have glowColor)
+function getCategoryColor(category) {
+  const cat = CATEGORIES[category];
+  return cat ? cat.color : 0xf5c542; // default warm gold
+}
 
 export class DecisionFork extends Entity3D {
   constructor(decisionData, zPosition) {
@@ -13,6 +20,10 @@ export class DecisionFork extends Entity3D {
     this.y = 0;
     this.depth = 6; // Wide trigger zone
     this.width = 8;
+
+    // Derive glow colors from category
+    this.colorA = decisionData.optionA.glowColor || getCategoryColor(decisionData.category);
+    this.colorB = decisionData.optionB.glowColor || getCategoryColor(decisionData.category);
 
     // State
     this.triggered = false;   // Player entered zone
@@ -33,28 +44,28 @@ export class DecisionFork extends Entity3D {
     const d = this.decision;
 
     // Ground indicators - glowing lane highlights
-    // Option A (usually left lane)
+    // Option A
     const laneA = this._createLaneIndicator(
-      d.optionA.glowColor,
-      (this._laneToX(d.optionA.lane))
+      this.colorA,
+      this._laneToX(d.optionA.lane)
     );
     group.add(laneA);
     this.optionAMesh = laneA;
 
-    // Option B (usually right lane)
+    // Option B
     const laneB = this._createLaneIndicator(
-      d.optionB.glowColor,
-      (this._laneToX(d.optionB.lane))
+      this.colorB,
+      this._laneToX(d.optionB.lane)
     );
     group.add(laneB);
     this.optionBMesh = laneB;
 
     // Floating icon markers above each lane
-    const iconA = this._createIconMarker(d.optionA.glowColor, d.optionA.icon);
+    const iconA = this._createIconMarker(this.colorA);
     iconA.position.set(this._laneToX(d.optionA.lane), 2.5, 0);
     group.add(iconA);
 
-    const iconB = this._createIconMarker(d.optionB.glowColor, d.optionB.icon);
+    const iconB = this._createIconMarker(this.colorB);
     iconB.position.set(this._laneToX(d.optionB.lane), 2.5, 0);
     group.add(iconB);
 
@@ -75,14 +86,22 @@ export class DecisionFork extends Entity3D {
     return group;
   }
 
-  _laneToX(laneName) {
+  // Convert lane index (0=left, 1=center, 2=right) OR string to X position
+  _laneToX(lane) {
+    if (typeof lane === 'number') {
+      // 0=left, 1=center, 2=right
+      return (lane - 1) * 3; // -3, 0, 3
+    }
+    // Legacy string support
     const map = { left: -3, center: 0, right: 3 };
-    return map[laneName] || 0;
+    return map[lane] || 0;
   }
 
-  _laneNameToIndex(laneName) {
+  // Convert lane to index (0, 1, 2)
+  _laneToIndex(lane) {
+    if (typeof lane === 'number') return lane;
     const map = { left: 0, center: 1, right: 2 };
-    return map[laneName] !== undefined ? map[laneName] : 1;
+    return map[lane] !== undefined ? map[lane] : 1;
   }
 
   _createLaneIndicator(color, xPos) {
@@ -129,7 +148,7 @@ export class DecisionFork extends Entity3D {
     return group;
   }
 
-  _createIconMarker(color, iconType) {
+  _createIconMarker(color) {
     const group = new THREE.Group();
 
     // Floating beacon
@@ -164,7 +183,6 @@ export class DecisionFork extends Entity3D {
     if (this.resolved) return;
 
     // Pulse animation on markers
-    const pulse = 1 + Math.sin(Date.now() * 0.003) * 0.15;
     if (this.optionAMesh) {
       this.optionAMesh.children.forEach(c => {
         if (c.material && c.material.emissiveIntensity !== undefined) {
@@ -189,8 +207,8 @@ export class DecisionFork extends Entity3D {
   resolveChoice(playerLane) {
     if (this.resolved) return null;
 
-    const laneA = this._laneNameToIndex(this.decision.optionA.lane);
-    const laneB = this._laneNameToIndex(this.decision.optionB.lane);
+    const laneA = this._laneToIndex(this.decision.optionA.lane);
+    const laneB = this._laneToIndex(this.decision.optionB.lane);
 
     if (playerLane === laneA) {
       this.choiceMade = 'A';

@@ -2,6 +2,19 @@
 // Icon-based (NO text required) for 6-year-olds
 // Large touch targets for tablet play
 
+import { CATEGORIES } from '../data/decisions.js';
+
+// Category-based colors for card styling
+function getCategoryColor(category) {
+  const cat = CATEGORIES[category];
+  return cat ? cat.color : 0xf5c542;
+}
+
+function colorToHex(num) {
+  if (num === undefined || num === null) return '#f5c542'; // warm gold fallback
+  return '#' + num.toString(16).padStart(6, '0');
+}
+
 export class DecisionUI {
   constructor(overlay) {
     this.overlay = overlay;
@@ -124,42 +137,23 @@ export class DecisionUI {
     this.onChoice = onChoice;
     this.visible = true;
 
-    // Set icons based on decision data
-    const iconMap = {
-      toy: '\uD83E\uDDF8',
-      piggybank: '\uD83D\uDC37',
-      gamepad: '\uD83C\uDFAE',
-      savingsjar: '\uD83C\uDFFA',
-      smallcoin: '\uD83E\uDE99',
-      chest: '\uD83D\uDCE6',
-      candy: '\uD83C\uDF6C',
-      flowseed: '\uD83C\uDF31',
-      icecream: '\uD83C\uDF66',
-      groceries: '\uD83D\uDED2',
-      sneakers: '\uD83D\uDC5F',
-      books: '\uD83D\uDCDA',
-      keeprunning: '\uD83C\uDFC3',
-      helphand: '\uD83E\uDD1D',
-      drinkalone: '\uD83E\uDDC3',
-      sharedrink: '\uD83E\uDD42',
-      darkalley: '\uD83C\uDF11',
-      safepath: '\u2600\uFE0F',
-      grabeverything: '\uD83D\uDED2',
-      selectcarefully: '\u2705',
-    };
+    // Get category color for styling
+    const catColor = getCategoryColor(decision.category);
+    const catHex = colorToHex(catColor);
 
+    // Option A - use emoji icon directly from decision data
     const aIcon = this.cardA.iconEl;
+    aIcon.textContent = decision.optionA.icon || '\u2753';
+    aIcon.style.background = `radial-gradient(circle, ${catHex}40, transparent)`;
+
+    // Option B
     const bIcon = this.cardB.iconEl;
+    bIcon.textContent = decision.optionB.icon || '\u2753';
+    bIcon.style.background = `radial-gradient(circle, ${catHex}40, transparent)`;
 
-    aIcon.textContent = iconMap[decision.optionA.icon] || '\u2753';
-    aIcon.style.background = `radial-gradient(circle, ${colorToHex(decision.optionA.glowColor)}40, transparent)`;
-
-    bIcon.textContent = iconMap[decision.optionB.icon] || '\u2753';
-    bIcon.style.background = `radial-gradient(circle, ${colorToHex(decision.optionB.glowColor)}40, transparent)`;
-
-    // Color the card borders
-    this.cardA.style.borderColor = colorToHex(decision.optionA.glowColor) + '60';
-    this.cardB.style.borderColor = colorToHex(decision.optionB.glowColor) + '60';
+    // Color the card borders with category color
+    this.cardA.style.borderColor = catHex + '60';
+    this.cardB.style.borderColor = catHex + '60';
 
     this.element.style.display = 'flex';
     this.timerFill.style.width = '100%';
@@ -175,8 +169,4 @@ export class DecisionUI {
     this.element.style.display = 'none';
     this.onChoice = null;
   }
-}
-
-function colorToHex(num) {
-  return '#' + num.toString(16).padStart(6, '0');
 }

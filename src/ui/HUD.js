@@ -99,6 +99,31 @@ export class HUD {
     }
     topBar.appendChild(this.cityMini);
 
+    // Pause button (before coins, right side)
+    this.pauseBtn = document.createElement('button');
+    this.pauseBtn.style.cssText = `
+      background: rgba(0,0,0,0.4);
+      border: 1px solid rgba(245,197,66,0.3);
+      border-radius: 8px;
+      color: #FFD700; font-size: 18px;
+      width: 36px; height: 36px;
+      cursor: pointer; pointer-events: auto;
+      display: flex; align-items: center; justify-content: center;
+      transition: background 0.15s ease;
+    `;
+    this.pauseBtn.textContent = '\u23F8';
+    this.pauseBtn.addEventListener('pointerenter', () => {
+      this.pauseBtn.style.background = 'rgba(245,197,66,0.2)';
+    });
+    this.pauseBtn.addEventListener('pointerleave', () => {
+      this.pauseBtn.style.background = 'rgba(0,0,0,0.4)';
+    });
+    this.pauseBtn.addEventListener('click', () => {
+      if (this.onPause) this.onPause();
+    });
+    this.onPause = null;
+    topBar.appendChild(this.pauseBtn);
+
     // Coin counter (right side)
     const coinContainer = document.createElement('div');
     coinContainer.style.cssText = `
