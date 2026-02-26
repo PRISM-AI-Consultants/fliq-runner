@@ -1,0 +1,1785 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FLIQ Runner - Financial Literacy Adventure for Kids | WealthWise Kids</title>
+  <meta name="description" content="FLIQ Runner is a 3D city runner game that teaches children ages 6-10 smart money decisions. Part of the Wealth Wise Kids Project by The Carter & Olay Foundation, Inc.">
+  <meta name="theme-color" content="#584998">
+  <meta property="og:title" content="FLIQ Runner - Financial Literacy Adventure for Kids">
+  <meta property="og:description" content="Learn smart money decisions through an exciting 3D city runner. Designed for children of color, ages 6-10.">
+  <meta property="og:type" content="website">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    /* ============================================
+       CSS Custom Properties - Brand Colors
+       ============================================ */
+    :root {
+      --purple: #584998;
+      --purple-dark: #3d3370;
+      --purple-light: #7b6bb5;
+      --pink: #EB5273;
+      --pink-light: #f07a93;
+      --gold: #F7D160;
+      --gold-dark: #e6b820;
+      --sky-blue: #73DAF4;
+      --navy: #18102B;
+      --teal: #45BAA5;
+      --white: #ffffff;
+      --off-white: #faf9fc;
+      --gray-light: #f0eef5;
+      --gray-mid: #9590a8;
+      --text-primary: #18102B;
+      --text-secondary: #4a4260;
+      --radius: 16px;
+      --radius-sm: 10px;
+      --shadow: 0 4px 24px rgba(88, 73, 152, 0.10);
+      --shadow-lg: 0 12px 48px rgba(88, 73, 152, 0.15);
+      --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* ============================================
+       Reset & Base
+       ============================================ */
+    *, *::before, *::after {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+      -webkit-text-size-adjust: 100%;
+    }
+
+    body {
+      font-family: 'Nunito', Arial, Helvetica, sans-serif;
+      color: var(--text-primary);
+      background: var(--white);
+      line-height: 1.6;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    img { max-width: 100%; display: block; }
+    a { text-decoration: none; color: inherit; }
+    ul { list-style: none; }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    /* ============================================
+       Scroll Animation
+       ============================================ */
+    .reveal {
+      opacity: 0;
+      transform: translateY(32px);
+      transition: opacity 0.7s var(--transition), transform 0.7s var(--transition);
+    }
+
+    .reveal.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .reveal-delay-1 { transition-delay: 0.1s; }
+    .reveal-delay-2 { transition-delay: 0.2s; }
+    .reveal-delay-3 { transition-delay: 0.3s; }
+    .reveal-delay-4 { transition-delay: 0.4s; }
+    .reveal-delay-5 { transition-delay: 0.5s; }
+    .reveal-delay-6 { transition-delay: 0.6s; }
+
+    /* ============================================
+       Navigation
+       ============================================ */
+    .nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 1000;
+      background: rgba(255, 255, 255, 0.92);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-bottom: 1px solid rgba(88, 73, 152, 0.08);
+      transition: box-shadow var(--transition);
+    }
+
+    .nav.scrolled {
+      box-shadow: 0 2px 20px rgba(88, 73, 152, 0.1);
+    }
+
+    .nav-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 72px;
+    }
+
+    .nav-logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .nav-logo-icon {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .nav-logo-icon .book {
+      font-size: 22px;
+      color: var(--purple);
+      font-weight: 900;
+      line-height: 1;
+    }
+
+    .nav-logo-icon .heart {
+      font-size: 16px;
+      color: var(--pink);
+      font-weight: 900;
+      line-height: 1;
+      margin-top: -8px;
+    }
+
+    .nav-logo-icon .figure {
+      font-size: 18px;
+      color: var(--gold-dark);
+      font-weight: 900;
+      line-height: 1;
+    }
+
+    .nav-logo-text {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--purple);
+      line-height: 1.2;
+    }
+
+    .nav-logo-text span {
+      display: block;
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--gray-mid);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 32px;
+    }
+
+    .nav-links a {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      transition: color var(--transition);
+    }
+
+    .nav-links a:hover {
+      color: var(--purple);
+    }
+
+    .nav-cta {
+      background: var(--purple);
+      color: var(--white) !important;
+      padding: 10px 24px;
+      border-radius: 50px;
+      font-weight: 700 !important;
+      font-size: 14px !important;
+      transition: background var(--transition), transform var(--transition) !important;
+    }
+
+    .nav-cta:hover {
+      background: var(--purple-dark);
+      transform: translateY(-1px);
+    }
+
+    .nav-mobile-toggle {
+      display: none;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 8px;
+    }
+
+    .nav-mobile-toggle span {
+      display: block;
+      width: 24px;
+      height: 2px;
+      background: var(--navy);
+      margin: 6px 0;
+      border-radius: 2px;
+      transition: var(--transition);
+    }
+
+    /* ============================================
+       Hero Section
+       ============================================ */
+    .hero {
+      position: relative;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      background: linear-gradient(135deg, #584998 0%, #3d3370 25%, #18102B 50%, #2a1a4a 75%, #584998 100%);
+      padding: 120px 24px 80px;
+    }
+
+    .hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 600px 400px at 20% 30%, rgba(235, 82, 115, 0.2), transparent),
+        radial-gradient(ellipse 500px 500px at 80% 60%, rgba(115, 218, 244, 0.15), transparent),
+        radial-gradient(ellipse 400px 300px at 50% 80%, rgba(247, 209, 96, 0.12), transparent);
+      pointer-events: none;
+    }
+
+    /* Animated city silhouette */
+    .hero::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 180px;
+      background:
+        linear-gradient(to top, rgba(24, 16, 43, 0.6), transparent),
+        repeating-linear-gradient(
+          90deg,
+          transparent,
+          transparent 30px,
+          rgba(88, 73, 152, 0.15) 30px,
+          rgba(88, 73, 152, 0.15) 32px
+        );
+      mask-image: 
+        polygon(
+          0% 100%,
+          0% 70%, 3% 70%, 3% 50%, 6% 50%, 6% 70%,
+          9% 70%, 9% 40%, 11% 40%, 11% 35%, 14% 35%, 14% 70%,
+          17% 70%, 17% 55%, 20% 55%, 20% 70%,
+          23% 70%, 23% 30%, 25% 30%, 25% 25%, 28% 25%, 28% 70%,
+          31% 70%, 31% 60%, 34% 60%, 34% 70%,
+          37% 70%, 37% 45%, 40% 45%, 40% 70%,
+          43% 70%, 43% 35%, 45% 35%, 45% 30%, 48% 30%, 48% 70%,
+          51% 70%, 51% 55%, 54% 55%, 54% 70%,
+          57% 70%, 57% 40%, 59% 40%, 59% 35%, 62% 35%, 62% 70%,
+          65% 70%, 65% 50%, 68% 50%, 68% 70%,
+          71% 70%, 71% 45%, 74% 45%, 74% 70%,
+          77% 70%, 77% 30%, 79% 30%, 79% 25%, 82% 25%, 82% 70%,
+          85% 70%, 85% 55%, 88% 55%, 88% 70%,
+          91% 70%, 91% 40%, 94% 40%, 94% 70%,
+          97% 70%, 97% 50%, 100% 50%, 100% 100%
+        );
+      -webkit-mask-image:
+        polygon(
+          0% 100%,
+          0% 70%, 3% 70%, 3% 50%, 6% 50%, 6% 70%,
+          9% 70%, 9% 40%, 11% 40%, 11% 35%, 14% 35%, 14% 70%,
+          17% 70%, 17% 55%, 20% 55%, 20% 70%,
+          23% 70%, 23% 30%, 25% 30%, 25% 25%, 28% 25%, 28% 70%,
+          31% 70%, 31% 60%, 34% 60%, 34% 70%,
+          37% 70%, 37% 45%, 40% 45%, 40% 70%,
+          43% 70%, 43% 35%, 45% 35%, 45% 30%, 48% 30%, 48% 70%,
+          51% 70%, 51% 55%, 54% 55%, 54% 70%,
+          57% 70%, 57% 40%, 59% 40%, 59% 35%, 62% 35%, 62% 70%,
+          65% 70%, 65% 50%, 68% 50%, 68% 70%,
+          71% 70%, 71% 45%, 74% 45%, 74% 70%,
+          77% 70%, 77% 30%, 79% 30%, 79% 25%, 82% 25%, 82% 70%,
+          85% 70%, 85% 55%, 88% 55%, 88% 70%,
+          91% 70%, 91% 40%, 94% 40%, 94% 70%,
+          97% 70%, 97% 50%, 100% 50%, 100% 100%
+        );
+      pointer-events: none;
+    }
+
+    .hero-content {
+      position: relative;
+      z-index: 2;
+      text-align: center;
+      max-width: 800px;
+    }
+
+    .hero-badge {
+      display: inline-block;
+      background: rgba(247, 209, 96, 0.15);
+      border: 1px solid rgba(247, 209, 96, 0.3);
+      color: var(--gold);
+      font-size: 13px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      padding: 8px 20px;
+      border-radius: 50px;
+      margin-bottom: 28px;
+    }
+
+    .hero-title {
+      font-size: clamp(3rem, 8vw, 5.5rem);
+      font-weight: 900;
+      color: var(--white);
+      line-height: 1.05;
+      margin-bottom: 8px;
+      letter-spacing: -1px;
+    }
+
+    .hero-title .fliq {
+      background: linear-gradient(135deg, var(--gold), var(--pink), var(--sky-blue));
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .hero-title .runner {
+      display: block;
+      font-size: 0.55em;
+      font-weight: 700;
+      letter-spacing: 12px;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, 0.7);
+      -webkit-text-fill-color: rgba(255, 255, 255, 0.7);
+      background: none;
+      -webkit-background-clip: unset;
+      background-clip: unset;
+    }
+
+    .hero-subtitle {
+      font-size: clamp(1.1rem, 2.5vw, 1.4rem);
+      color: rgba(255, 255, 255, 0.85);
+      font-weight: 600;
+      margin-bottom: 16px;
+    }
+
+    .hero-description {
+      font-size: clamp(0.95rem, 2vw, 1.1rem);
+      color: rgba(255, 255, 255, 0.6);
+      max-width: 560px;
+      margin: 0 auto 40px;
+      line-height: 1.7;
+    }
+
+    .hero-actions {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 16px 40px;
+      border-radius: 50px;
+      font-family: inherit;
+      font-size: 16px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      border: none;
+      cursor: pointer;
+      transition: transform var(--transition), box-shadow var(--transition), background var(--transition);
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--pink), var(--pink-light));
+      color: var(--white);
+      box-shadow: 0 8px 32px rgba(235, 82, 115, 0.35);
+    }
+
+    .btn-primary:hover {
+      box-shadow: 0 12px 40px rgba(235, 82, 115, 0.5);
+    }
+
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.1);
+      color: var(--white);
+      border: 2px solid rgba(255, 255, 255, 0.25);
+      backdrop-filter: blur(8px);
+    }
+
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.18);
+      border-color: rgba(255, 255, 255, 0.4);
+    }
+
+    .btn .arrow {
+      font-size: 20px;
+      transition: transform var(--transition);
+    }
+
+    .btn:hover .arrow {
+      transform: translateX(4px);
+    }
+
+    .hero-stats {
+      margin-top: 56px;
+      display: flex;
+      justify-content: center;
+      gap: 48px;
+      flex-wrap: wrap;
+    }
+
+    .hero-stat {
+      text-align: center;
+    }
+
+    .hero-stat-value {
+      font-size: 2rem;
+      font-weight: 900;
+      color: var(--gold);
+    }
+
+    .hero-stat-label {
+      font-size: 13px;
+      color: rgba(255, 255, 255, 0.5);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    /* ============================================
+       Section Base
+       ============================================ */
+    .section {
+      padding: 100px 0;
+    }
+
+    .section-header {
+      text-align: center;
+      max-width: 640px;
+      margin: 0 auto 60px;
+    }
+
+    .section-label {
+      display: inline-block;
+      font-size: 12px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 3px;
+      color: var(--purple);
+      margin-bottom: 12px;
+    }
+
+    .section-title {
+      font-size: clamp(2rem, 4vw, 2.8rem);
+      font-weight: 900;
+      color: var(--navy);
+      line-height: 1.15;
+      margin-bottom: 16px;
+    }
+
+    .section-subtitle {
+      font-size: 1.05rem;
+      color: var(--text-secondary);
+      line-height: 1.7;
+    }
+
+    /* ============================================
+       What is FLIQ? Section
+       ============================================ */
+    .what-is-fliq {
+      background: var(--off-white);
+    }
+
+    .fliq-meaning {
+      text-align: center;
+      margin-bottom: 56px;
+    }
+
+    .fliq-meaning h3 {
+      font-size: 1.3rem;
+      font-weight: 800;
+      color: var(--purple);
+    }
+
+    .fliq-meaning h3 span {
+      color: var(--pink);
+    }
+
+    .fliq-meaning p {
+      font-size: 1rem;
+      color: var(--text-secondary);
+      margin-top: 8px;
+      max-width: 520px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .dimension-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 20px;
+    }
+
+    .dimension-card {
+      background: var(--white);
+      border-radius: var(--radius);
+      padding: 32px 28px;
+      display: flex;
+      align-items: flex-start;
+      gap: 20px;
+      box-shadow: var(--shadow);
+      border: 1px solid rgba(88, 73, 152, 0.06);
+      transition: transform var(--transition), box-shadow var(--transition);
+    }
+
+    .dimension-card:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-lg);
+    }
+
+    .dimension-icon {
+      flex-shrink: 0;
+      width: 56px;
+      height: 56px;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 26px;
+    }
+
+    .dimension-icon.saving {
+      background: linear-gradient(135deg, rgba(69, 186, 165, 0.12), rgba(69, 186, 165, 0.05));
+      color: var(--teal);
+    }
+
+    .dimension-icon.patience {
+      background: linear-gradient(135deg, rgba(115, 218, 244, 0.15), rgba(115, 218, 244, 0.05));
+      color: var(--sky-blue);
+    }
+
+    .dimension-icon.needs {
+      background: linear-gradient(135deg, rgba(88, 73, 152, 0.12), rgba(88, 73, 152, 0.05));
+      color: var(--purple);
+    }
+
+    .dimension-icon.sharing {
+      background: linear-gradient(135deg, rgba(235, 82, 115, 0.12), rgba(235, 82, 115, 0.05));
+      color: var(--pink);
+    }
+
+    .dimension-icon.risk {
+      background: linear-gradient(135deg, rgba(247, 209, 96, 0.2), rgba(247, 209, 96, 0.05));
+      color: var(--gold-dark);
+    }
+
+    .dimension-icon.budgeting {
+      background: linear-gradient(135deg, rgba(88, 73, 152, 0.12), rgba(235, 82, 115, 0.08));
+      color: var(--purple-light);
+    }
+
+    .dimension-content h4 {
+      font-size: 1.05rem;
+      font-weight: 800;
+      color: var(--navy);
+      margin-bottom: 6px;
+    }
+
+    .dimension-content p {
+      font-size: 0.92rem;
+      color: var(--text-secondary);
+      line-height: 1.6;
+    }
+
+    /* ============================================
+       How It Works Section
+       ============================================ */
+    .how-it-works {
+      background: var(--white);
+    }
+
+    .steps-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 32px;
+      position: relative;
+    }
+
+    .steps-grid::before {
+      content: '';
+      position: absolute;
+      top: 60px;
+      left: calc(16.67% + 24px);
+      right: calc(16.67% + 24px);
+      height: 3px;
+      background: linear-gradient(90deg, var(--purple), var(--pink), var(--gold));
+      border-radius: 2px;
+    }
+
+    .step-card {
+      text-align: center;
+      position: relative;
+    }
+
+    .step-number {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+      font-weight: 900;
+      color: var(--white);
+      margin: 0 auto 28px;
+      position: relative;
+      z-index: 2;
+    }
+
+    .step-card:nth-child(1) .step-number {
+      background: linear-gradient(135deg, var(--purple), var(--purple-light));
+      box-shadow: 0 6px 20px rgba(88, 73, 152, 0.3);
+    }
+
+    .step-card:nth-child(2) .step-number {
+      background: linear-gradient(135deg, var(--pink), var(--pink-light));
+      box-shadow: 0 6px 20px rgba(235, 82, 115, 0.3);
+    }
+
+    .step-card:nth-child(3) .step-number {
+      background: linear-gradient(135deg, var(--gold-dark), var(--gold));
+      box-shadow: 0 6px 20px rgba(247, 209, 96, 0.3);
+    }
+
+    .step-visual {
+      background: var(--off-white);
+      border-radius: var(--radius);
+      padding: 40px 24px;
+      margin-bottom: 24px;
+      min-height: 180px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid rgba(88, 73, 152, 0.06);
+    }
+
+    .step-characters {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .step-char {
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      font-weight: 800;
+      color: var(--white);
+      box-shadow: 0 3px 10px rgba(0,0,0,0.15);
+    }
+
+    .step-city {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .step-city-name {
+      font-size: 1.3rem;
+      font-weight: 900;
+      background: linear-gradient(135deg, var(--purple), var(--pink));
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .city-buildings {
+      display: flex;
+      align-items: flex-end;
+      gap: 4px;
+      height: 60px;
+    }
+
+    .city-building {
+      width: 16px;
+      border-radius: 3px 3px 0 0;
+      opacity: 0.7;
+    }
+
+    .decision-bubbles {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .decision-bubble {
+      background: var(--white);
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 700;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+
+    .step-score {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .score-radar {
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      background: conic-gradient(
+        var(--teal) 0deg 60deg,
+        var(--sky-blue) 60deg 120deg,
+        var(--purple) 120deg 180deg,
+        var(--pink) 180deg 240deg,
+        var(--gold) 240deg 300deg,
+        var(--purple-light) 300deg 360deg
+      );
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 16px rgba(88, 73, 152, 0.2);
+    }
+
+    .score-radar-inner {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      background: var(--off-white);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.1rem;
+      font-weight: 900;
+      color: var(--purple);
+    }
+
+    .score-label {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--purple);
+    }
+
+    .step-card h3 {
+      font-size: 1.2rem;
+      font-weight: 800;
+      color: var(--navy);
+      margin-bottom: 8px;
+    }
+
+    .step-card p {
+      font-size: 0.95rem;
+      color: var(--text-secondary);
+      line-height: 1.6;
+      max-width: 280px;
+      margin: 0 auto;
+    }
+
+    /* ============================================
+       Parents & Educators Section
+       ============================================ */
+    .parents-section {
+      background: linear-gradient(135deg, #584998 0%, #3d3370 50%, #18102B 100%);
+      color: var(--white);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .parents-section::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 500px 400px at 10% 20%, rgba(235, 82, 115, 0.1), transparent),
+        radial-gradient(ellipse 400px 400px at 90% 80%, rgba(115, 218, 244, 0.08), transparent);
+      pointer-events: none;
+    }
+
+    .parents-section .section-label {
+      color: var(--gold);
+    }
+
+    .parents-section .section-title {
+      color: var(--white);
+    }
+
+    .parents-section .section-subtitle {
+      color: rgba(255, 255, 255, 0.7);
+    }
+
+    .parents-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 24px;
+      position: relative;
+      z-index: 2;
+    }
+
+    .parent-card {
+      background: rgba(255, 255, 255, 0.07);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: var(--radius);
+      padding: 32px 24px;
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      transition: transform var(--transition), background var(--transition);
+    }
+
+    .parent-card:hover {
+      transform: translateY(-4px);
+      background: rgba(255, 255, 255, 0.11);
+    }
+
+    .parent-card-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      margin-bottom: 20px;
+    }
+
+    .parent-card:nth-child(1) .parent-card-icon {
+      background: rgba(69, 186, 165, 0.2);
+    }
+
+    .parent-card:nth-child(2) .parent-card-icon {
+      background: rgba(247, 209, 96, 0.2);
+    }
+
+    .parent-card:nth-child(3) .parent-card-icon {
+      background: rgba(115, 218, 244, 0.2);
+    }
+
+    .parent-card:nth-child(4) .parent-card-icon {
+      background: rgba(235, 82, 115, 0.2);
+    }
+
+    .parent-card h4 {
+      font-size: 1.05rem;
+      font-weight: 800;
+      color: var(--white);
+      margin-bottom: 10px;
+    }
+
+    .parent-card p {
+      font-size: 0.92rem;
+      color: rgba(255, 255, 255, 0.65);
+      line-height: 1.65;
+    }
+
+    /* ============================================
+       About Section
+       ============================================ */
+    .about-section {
+      background: var(--off-white);
+    }
+
+    .about-content {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 64px;
+      align-items: center;
+    }
+
+    .about-text h3 {
+      font-size: 1.6rem;
+      font-weight: 900;
+      color: var(--navy);
+      margin-bottom: 16px;
+      line-height: 1.2;
+    }
+
+    .about-text p {
+      font-size: 1rem;
+      color: var(--text-secondary);
+      line-height: 1.75;
+      margin-bottom: 16px;
+    }
+
+    .about-text p:last-of-type {
+      margin-bottom: 28px;
+    }
+
+    .about-mission {
+      background: var(--white);
+      border-left: 4px solid var(--purple);
+      padding: 20px 24px;
+      border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+      margin-bottom: 24px;
+    }
+
+    .about-mission p {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--purple);
+      font-style: italic;
+      margin-bottom: 0;
+    }
+
+    .about-visual {
+      position: relative;
+    }
+
+    .about-card {
+      background: var(--white);
+      border-radius: var(--radius);
+      padding: 48px 40px;
+      box-shadow: var(--shadow-lg);
+      text-align: center;
+      border: 1px solid rgba(88, 73, 152, 0.06);
+    }
+
+    .about-logo-graphic {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+
+    .about-logo-book {
+      font-size: 48px;
+      color: var(--purple);
+      font-weight: 900;
+      line-height: 1;
+    }
+
+    .about-logo-heart {
+      font-size: 32px;
+      color: var(--pink);
+      font-weight: 900;
+      line-height: 1;
+      margin-top: -20px;
+    }
+
+    .about-logo-figure {
+      font-size: 40px;
+      color: var(--gold-dark);
+      font-weight: 900;
+      line-height: 1;
+    }
+
+    .about-card h4 {
+      font-size: 1.3rem;
+      font-weight: 900;
+      color: var(--navy);
+      margin-bottom: 6px;
+    }
+
+    .about-card .about-card-sub {
+      font-size: 0.85rem;
+      color: var(--gray-mid);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 20px;
+    }
+
+    .about-card p.about-card-desc {
+      font-size: 0.95rem;
+      color: var(--text-secondary);
+      line-height: 1.65;
+    }
+
+    .about-tags {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 24px;
+    }
+
+    .about-tag {
+      background: var(--off-white);
+      color: var(--purple);
+      font-size: 12px;
+      font-weight: 700;
+      padding: 6px 14px;
+      border-radius: 50px;
+      border: 1px solid rgba(88, 73, 152, 0.1);
+    }
+
+    /* ============================================
+       CTA Banner
+       ============================================ */
+    .cta-banner {
+      background: linear-gradient(135deg, var(--pink), #d43a5c);
+      padding: 80px 24px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .cta-banner::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse 600px 300px at 50% 100%, rgba(247, 209, 96, 0.15), transparent);
+      pointer-events: none;
+    }
+
+    .cta-banner h2 {
+      font-size: clamp(1.8rem, 4vw, 2.5rem);
+      font-weight: 900;
+      color: var(--white);
+      margin-bottom: 12px;
+      position: relative;
+      z-index: 2;
+    }
+
+    .cta-banner p {
+      font-size: 1.1rem;
+      color: rgba(255, 255, 255, 0.85);
+      margin-bottom: 32px;
+      position: relative;
+      z-index: 2;
+    }
+
+    .cta-banner .btn {
+      position: relative;
+      z-index: 2;
+    }
+
+    .btn-white {
+      background: var(--white);
+      color: var(--pink);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+    }
+
+    .btn-white:hover {
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25);
+    }
+
+    /* ============================================
+       Footer
+       ============================================ */
+    .footer {
+      background: var(--navy);
+      color: rgba(255, 255, 255, 0.7);
+      padding: 64px 0 32px;
+    }
+
+    .footer-top {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr;
+      gap: 48px;
+      margin-bottom: 48px;
+    }
+
+    .footer-brand h3 {
+      font-size: 1.1rem;
+      font-weight: 800;
+      color: var(--white);
+      margin-bottom: 4px;
+    }
+
+    .footer-brand .footer-brand-sub {
+      font-size: 0.8rem;
+      color: rgba(255, 255, 255, 0.4);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 16px;
+    }
+
+    .footer-brand p {
+      font-size: 0.9rem;
+      line-height: 1.7;
+      max-width: 360px;
+    }
+
+    .footer-links h4 {
+      font-size: 0.85rem;
+      font-weight: 800;
+      color: var(--white);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 16px;
+    }
+
+    .footer-links a {
+      display: block;
+      font-size: 0.9rem;
+      color: rgba(255, 255, 255, 0.6);
+      padding: 6px 0;
+      transition: color var(--transition);
+    }
+
+    .footer-links a:hover {
+      color: var(--gold);
+    }
+
+    .footer-social {
+      display: flex;
+      gap: 12px;
+      margin-top: 20px;
+    }
+
+    .footer-social a {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.08);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      font-weight: 700;
+      color: rgba(255, 255, 255, 0.6);
+      transition: background var(--transition), color var(--transition);
+      padding: 0;
+    }
+
+    .footer-social a:hover {
+      background: rgba(255, 255, 255, 0.15);
+      color: var(--white);
+    }
+
+    .footer-social svg {
+      width: 18px;
+      height: 18px;
+      fill: currentColor;
+    }
+
+    .footer-bottom {
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      padding-top: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .footer-bottom p {
+      font-size: 0.82rem;
+      color: rgba(255, 255, 255, 0.4);
+    }
+
+    .footer-bottom-address {
+      font-size: 0.82rem;
+      color: rgba(255, 255, 255, 0.35);
+    }
+
+    /* ============================================
+       Mobile Responsive
+       ============================================ */
+    @media (max-width: 900px) {
+      .steps-grid {
+        grid-template-columns: 1fr;
+        max-width: 420px;
+        margin: 0 auto;
+      }
+
+      .steps-grid::before {
+        display: none;
+      }
+
+      .about-content {
+        grid-template-columns: 1fr;
+        gap: 40px;
+      }
+
+      .footer-top {
+        grid-template-columns: 1fr;
+        gap: 32px;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .nav-links {
+        display: none;
+        position: absolute;
+        top: 72px;
+        left: 0;
+        right: 0;
+        background: var(--white);
+        flex-direction: column;
+        padding: 24px;
+        gap: 20px;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+        border-bottom: 1px solid rgba(88, 73, 152, 0.1);
+      }
+
+      .nav-links.open {
+        display: flex;
+      }
+
+      .nav-mobile-toggle {
+        display: block;
+      }
+
+      .section {
+        padding: 72px 0;
+      }
+
+      .hero {
+        padding: 100px 24px 64px;
+        min-height: auto;
+      }
+
+      .hero-stats {
+        gap: 32px;
+      }
+
+      .dimension-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .parents-grid {
+        grid-template-columns: 1fr;
+        max-width: 400px;
+        margin: 0 auto;
+      }
+
+      .footer-bottom {
+        flex-direction: column;
+        text-align: center;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .hero-title {
+        font-size: 2.8rem;
+      }
+
+      .hero-title .runner {
+        letter-spacing: 6px;
+      }
+
+      .hero-actions {
+        flex-direction: column;
+      }
+
+      .btn {
+        width: 100%;
+        justify-content: center;
+      }
+
+      .dimension-card {
+        flex-direction: column;
+        text-align: center;
+        align-items: center;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ============================================
+       Navigation
+       ============================================ -->
+  <nav class="nav" id="nav">
+    <div class="nav-inner">
+      <a href="#" class="nav-logo">
+        <div class="nav-logo-icon">
+          <svg width="36" height="36" viewBox="0 0 36 36" fill="none" aria-hidden="true">
+            <!-- Book -->
+            <path d="M4 28V8C4 6.9 4.9 6 6 6H16L18 8H30C31.1 8 32 8.9 32 10V14" stroke="#584998" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+            <path d="M6 28H15" stroke="#584998" stroke-width="2.5" stroke-linecap="round"/>
+            <!-- Heart -->
+            <path d="M26 18C24.5 16 22 16 21 17.5C20 16 17.5 16 16 18C16 21 21 25 21 25C21 25 26 21 26 18Z" fill="#EB5273"/>
+            <!-- Child figure with arms raised -->
+            <circle cx="29" cy="16" r="2.5" fill="#F7D160"/>
+            <path d="M29 19V24M29 19L26 17M29 19L32 17M27 27L29 24L31 27" stroke="#F7D160" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+          </svg>
+        </div>
+        <div class="nav-logo-text">
+          The Carter & Olay Foundation
+          <span>Wealth Wise Kids</span>
+        </div>
+      </a>
+      <div class="nav-links" id="navLinks">
+        <a href="#what-is-fliq">What is FLIQ?</a>
+        <a href="#how-it-works">How It Works</a>
+        <a href="#parents">Parents</a>
+        <a href="#about">About</a>
+        <a href="./index.html" class="nav-cta">Play Now</a>
+      </div>
+      <button class="nav-mobile-toggle" id="navToggle" aria-label="Toggle navigation">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- ============================================
+       Hero Section
+       ============================================ -->
+  <section class="hero" id="hero">
+    <div class="hero-content">
+      <div class="hero-badge reveal">Wealth Wise Kids Project</div>
+      <h1 class="hero-title reveal reveal-delay-1">
+        <span class="fliq">FLIQ</span>
+        <span class="runner">Runner</span>
+      </h1>
+      <p class="hero-subtitle reveal reveal-delay-2">A Financial Literacy Adventure for Kids</p>
+      <p class="hero-description reveal reveal-delay-3">
+        Run through Velo City, make smart money decisions, and discover your unique financial personality. Designed for children ages 6-10 with love and purpose.
+      </p>
+      <div class="hero-actions reveal reveal-delay-4">
+        <a href="./index.html" class="btn btn-primary">
+          Play Now <span class="arrow">&rarr;</span>
+        </a>
+        <a href="#what-is-fliq" class="btn btn-secondary">
+          Learn More
+        </a>
+      </div>
+      <div class="hero-stats reveal reveal-delay-5">
+        <div class="hero-stat">
+          <div class="hero-stat-value">6</div>
+          <div class="hero-stat-label">Financial Dimensions</div>
+        </div>
+        <div class="hero-stat">
+          <div class="hero-stat-value">5</div>
+          <div class="hero-stat-label">Playable Characters</div>
+        </div>
+        <div class="hero-stat">
+          <div class="hero-stat-value">100%</div>
+          <div class="hero-stat-label">Positive Framing</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================
+       What is FLIQ? Section
+       ============================================ -->
+  <section class="section what-is-fliq" id="what-is-fliq">
+    <div class="container">
+      <div class="section-header reveal">
+        <div class="section-label">The Game</div>
+        <h2 class="section-title">What is FLIQ?</h2>
+        <p class="section-subtitle">
+          FLIQ measures six dimensions of financial thinking in children - not right or wrong answers, but how they naturally approach money decisions.
+        </p>
+      </div>
+
+      <div class="fliq-meaning reveal">
+        <h3><span>F</span>inancial <span>L</span>iteracy <span>I</span>ntelligence <span>Q</span>uotient</h3>
+        <p>Every child has a unique financial personality. FLIQ helps them discover it through play.</p>
+      </div>
+
+      <div class="dimension-grid">
+        <div class="dimension-card reveal reveal-delay-1">
+          <div class="dimension-icon saving">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 5c-1.5 0-2.8 1.4-3 2-3.5-1.5-11-.3-11 5 0 1.8 0 3 2 4.5V20h4v-2h3v2h4v-4c1-.5 1.7-1 2-2h2v-4h-2c0-1-.5-1.5-1-2"/><path d="M2 9v1c0 1.1.9 2 2 2h1"/><circle cx="16" cy="11" r="1" fill="currentColor"/></svg>
+          </div>
+          <div class="dimension-content">
+            <h4>Saving</h4>
+            <p>Does your child naturally set aside for later? This dimension reveals their instinct to accumulate and protect resources.</p>
+          </div>
+        </div>
+
+        <div class="dimension-card reveal reveal-delay-2">
+          <div class="dimension-icon patience">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          </div>
+          <div class="dimension-content">
+            <h4>Patience</h4>
+            <p>Can they wait for a bigger reward? This tracks delayed gratification - one of the strongest predictors of financial success.</p>
+          </div>
+        </div>
+
+        <div class="dimension-card reveal reveal-delay-3">
+          <div class="dimension-icon needs">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
+          </div>
+          <div class="dimension-content">
+            <h4>Needs vs. Wants</h4>
+            <p>Can they tell the difference between what they need and what they want? This is the foundation of smart spending.</p>
+          </div>
+        </div>
+
+        <div class="dimension-card reveal reveal-delay-4">
+          <div class="dimension-icon sharing">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
+          </div>
+          <div class="dimension-content">
+            <h4>Sharing</h4>
+            <p>How generous are they with resources? This dimension captures their natural inclination toward giving and community.</p>
+          </div>
+        </div>
+
+        <div class="dimension-card reveal reveal-delay-5">
+          <div class="dimension-icon risk">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+          </div>
+          <div class="dimension-content">
+            <h4>Risk Awareness</h4>
+            <p>Are they cautious or adventurous with choices? Understanding risk tolerance early helps build balanced financial habits.</p>
+          </div>
+        </div>
+
+        <div class="dimension-card reveal reveal-delay-6">
+          <div class="dimension-icon budgeting">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+          </div>
+          <div class="dimension-content">
+            <h4>Budgeting</h4>
+            <p>Can they allocate limited resources wisely? This tracks how children distribute coins across competing priorities.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================
+       How It Works Section
+       ============================================ -->
+  <section class="section how-it-works" id="how-it-works">
+    <div class="container">
+      <div class="section-header reveal">
+        <div class="section-label">Gameplay</div>
+        <h2 class="section-title">How It Works</h2>
+        <p class="section-subtitle">
+          Three simple steps to unlock your child's financial personality. No reading required - everything is visual and icon-based.
+        </p>
+      </div>
+
+      <div class="steps-grid">
+        <div class="step-card reveal reveal-delay-1">
+          <div class="step-number">1</div>
+          <div class="step-visual">
+            <div class="step-characters">
+              <div class="step-char" style="background: linear-gradient(135deg, #8B6914, #A67C00);">M</div>
+              <div class="step-char" style="background: linear-gradient(135deg, #5C3317, #6B3A1F);">Z</div>
+              <div class="step-char" style="background: linear-gradient(135deg, #4A2D17, #5C3A2E);">A</div>
+              <div class="step-char" style="background: linear-gradient(135deg, #3B1F0B, #4D2B15);">K</div>
+              <div class="step-char" style="background: linear-gradient(135deg, #6B4423, #7D5230);">J</div>
+            </div>
+          </div>
+          <h3>Choose Your Character</h3>
+          <p>Pick from 5 diverse characters, each ready to run through Velo City and take on financial challenges.</p>
+        </div>
+
+        <div class="step-card reveal reveal-delay-2">
+          <div class="step-number">2</div>
+          <div class="step-visual">
+            <div class="step-city">
+              <div class="step-city-name">Velo City</div>
+              <div class="city-buildings">
+                <div class="city-building" style="height: 35px; background: var(--purple);"></div>
+                <div class="city-building" style="height: 50px; background: var(--pink);"></div>
+                <div class="city-building" style="height: 28px; background: var(--teal);"></div>
+                <div class="city-building" style="height: 55px; background: var(--sky-blue);"></div>
+                <div class="city-building" style="height: 40px; background: var(--gold);"></div>
+                <div class="city-building" style="height: 45px; background: var(--purple-light);"></div>
+                <div class="city-building" style="height: 32px; background: var(--pink);"></div>
+                <div class="city-building" style="height: 58px; background: var(--teal);"></div>
+              </div>
+              <div class="decision-bubbles">
+                <div class="decision-bubble" style="color: var(--teal);">Save?</div>
+                <div class="decision-bubble" style="color: var(--pink);">Share?</div>
+                <div class="decision-bubble" style="color: var(--purple);">Spend?</div>
+              </div>
+            </div>
+          </div>
+          <h3>Run and Decide</h3>
+          <p>Dash through the city, collect coins, and face real financial choices. Every decision shapes your FLIQ profile.</p>
+        </div>
+
+        <div class="step-card reveal reveal-delay-3">
+          <div class="step-number">3</div>
+          <div class="step-visual">
+            <div class="step-score">
+              <div class="score-radar">
+                <div class="score-radar-inner">FLIQ</div>
+              </div>
+              <div class="score-label">Your Financial Profile</div>
+              <div class="decision-bubbles">
+                <div class="decision-bubble" style="color: var(--teal); font-size: 11px;">Saver</div>
+                <div class="decision-bubble" style="color: var(--purple); font-size: 11px;">Patient</div>
+                <div class="decision-bubble" style="color: var(--pink); font-size: 11px;">Generous</div>
+              </div>
+            </div>
+          </div>
+          <h3>Get Your FLIQ Score</h3>
+          <p>Receive a personalized financial literacy profile with strengths, style, and positive insights for growth.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================
+       Parents & Educators Section
+       ============================================ -->
+  <section class="section parents-section" id="parents">
+    <div class="container">
+      <div class="section-header reveal">
+        <div class="section-label">For Grown-Ups</div>
+        <h2 class="section-title">Designed with Parents & Educators in Mind</h2>
+        <p class="section-subtitle">
+          FLIQ Runner is built on research-backed financial literacy principles, wrapped in a game kids actually want to play.
+        </p>
+      </div>
+
+      <div class="parents-grid">
+        <div class="parent-card reveal reveal-delay-1">
+          <div class="parent-card-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#45BAA5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+          </div>
+          <h4>No Child Fails</h4>
+          <p>FLIQ is a behavioral profile, not a test. Every outcome is framed positively, celebrating each child's unique approach to financial thinking.</p>
+        </div>
+
+        <div class="parent-card reveal reveal-delay-2">
+          <div class="parent-card-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#F7D160" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg>
+          </div>
+          <h4>Data-Driven Insights</h4>
+          <p>See real patterns in how your child makes financial decisions. Understand their strengths and where gentle guidance could help.</p>
+        </div>
+
+        <div class="parent-card reveal reveal-delay-3">
+          <div class="parent-card-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#73DAF4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
+          </div>
+          <h4>Ages 6-10, All Visual</h4>
+          <p>No reading required. All financial choices are presented through icons and visuals, making it accessible for early learners and all literacy levels.</p>
+        </div>
+
+        <div class="parent-card reveal reveal-delay-4">
+          <div class="parent-card-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#EB5273" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+          </div>
+          <h4>Curriculum Aligned</h4>
+          <p>Designed to complement financial literacy education standards with age-appropriate concepts in saving, budgeting, and smart decision-making.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================
+       About Section
+       ============================================ -->
+  <section class="section about-section" id="about">
+    <div class="container">
+      <div class="about-content">
+        <div class="about-text reveal">
+          <div class="section-label">Our Mission</div>
+          <h3>Part of the Wealth Wise Kids Project</h3>
+          <p>
+            FLIQ Runner was created as part of the Wealth Wise Kids initiative, a program dedicated to promoting financial literacy among children of color ages 6-10. We believe that early exposure to financial concepts - through play, not pressure - builds the foundation for lifelong financial confidence.
+          </p>
+          <div class="about-mission">
+            <p>"Bridging Gaps, Empowering Futures"</p>
+          </div>
+          <p>
+            Every child deserves to understand money, regardless of their background. FLIQ Runner meets kids where they are: in the game, in the fun, in the moment of discovery.
+          </p>
+          <a href="https://wealthwisekids.org" target="_blank" rel="noopener noreferrer" class="btn btn-primary" style="padding: 14px 32px; font-size: 14px;">
+            Visit WealthWiseKids.org <span class="arrow">&rarr;</span>
+          </a>
+        </div>
+        <div class="about-visual reveal reveal-delay-2">
+          <div class="about-card">
+            <div class="about-logo-graphic">
+              <svg width="100" height="80" viewBox="0 0 100 80" fill="none" aria-label="The Carter and Olay Foundation logo representation">
+                <!-- Open Book -->
+                <path d="M10 65V20C10 17 12 15 15 15H40L50 22H85C88 22 90 24 90 27V45" stroke="#584998" stroke-width="3.5" stroke-linecap="round" fill="none"/>
+                <path d="M15 65H40" stroke="#584998" stroke-width="3.5" stroke-linecap="round"/>
+                <path d="M20 30H35" stroke="#584998" stroke-width="2" stroke-linecap="round" opacity="0.4"/>
+                <path d="M20 37H32" stroke="#584998" stroke-width="2" stroke-linecap="round" opacity="0.3"/>
+                <!-- Heart -->
+                <path d="M68 42C64 37 58 37 55 40C52 37 46 37 42 42C42 50 55 58 55 58C55 58 68 50 68 42Z" fill="#EB5273"/>
+                <!-- Child figure -->
+                <circle cx="78" cy="35" r="6" fill="#F7D160"/>
+                <path d="M78 42V56M78 42L70 37M78 42L86 37M73 68L78 56L83 68" stroke="#F7D160" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+              </svg>
+            </div>
+            <h4>The Carter & Olay Foundation, Inc.</h4>
+            <div class="about-card-sub">Atlanta, Georgia</div>
+            <p class="about-card-desc">
+              A nonprofit organization committed to bridging educational and financial gaps for underserved communities, empowering the next generation through innovative programs and technology.
+            </p>
+            <div class="about-tags">
+              <span class="about-tag">Financial Literacy</span>
+              <span class="about-tag">Youth Education</span>
+              <span class="about-tag">Community Impact</span>
+              <span class="about-tag">Technology</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================
+       CTA Banner
+       ============================================ -->
+  <section class="cta-banner">
+    <h2 class="reveal">Ready to Discover Your Child's FLIQ?</h2>
+    <p class="reveal reveal-delay-1">It takes just a few minutes to play. Zero cost. Zero pressure. All fun.</p>
+    <a href="./index.html" class="btn btn-white reveal reveal-delay-2">
+      Start Playing <span class="arrow">&rarr;</span>
+    </a>
+  </section>
+
+  <!-- ============================================
+       Footer
+       ============================================ -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-top">
+        <div class="footer-brand">
+          <h3>The Carter & Olay Foundation, Inc.</h3>
+          <div class="footer-brand-sub">Wealth Wise Kids Project</div>
+          <p>
+            Bridging gaps and empowering futures through financial literacy education for children of color. Based in Atlanta, making impact everywhere.
+          </p>
+          <div class="footer-social">
+            <a href="https://www.instagram.com/wealthwise614/" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
+              <svg viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
+            </a>
+            <a href="https://www.facebook.com/profile.php?id=100090207498498" target="_blank" rel="noopener noreferrer" aria-label="Facebook">
+              <svg viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+            </a>
+            <a href="https://twitter.com/TCOFoundation1" target="_blank" rel="noopener noreferrer" aria-label="X (Twitter)">
+              <svg viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+            </a>
+            <a href="https://www.linkedin.com/company/the-carter-olay-foundation/" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn">
+              <svg viewBox="0 0 24 24"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+            </a>
+            <a href="https://www.youtube.com/@TCOF2023" target="_blank" rel="noopener noreferrer" aria-label="YouTube">
+              <svg viewBox="0 0 24 24"><path d="M23.498 6.186a3.016 3.016 0 00-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 00.502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 002.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 002.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+            </a>
+          </div>
+        </div>
+        <div class="footer-links">
+          <h4>Game</h4>
+          <a href="./index.html">Play FLIQ Runner</a>
+          <a href="#what-is-fliq">What is FLIQ?</a>
+          <a href="#how-it-works">How It Works</a>
+          <a href="#parents">For Parents</a>
+        </div>
+        <div class="footer-links">
+          <h4>Foundation</h4>
+          <a href="https://wealthwisekids.org" target="_blank" rel="noopener noreferrer">WealthWiseKids.org</a>
+          <a href="#about">About Us</a>
+          <a href="mailto:info@wealthwisekids.org">Contact</a>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>&copy; 2026 The Carter & Olay Foundation, Inc. All rights reserved.</p>
+        <div class="footer-bottom-address">3343 Peachtree Rd. NE Suite 2235, Atlanta, GA 30326 &nbsp;|&nbsp; info@wealthwisekids.org</div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ============================================
+       JavaScript
+       ============================================ -->
+  <script>
+    // ---- IntersectionObserver for scroll reveal ----
+    (function() {
+      const revealElements = document.querySelectorAll('.reveal');
+      
+      if ('IntersectionObserver' in window) {
+        const observer = new IntersectionObserver(function(entries) {
+          entries.forEach(function(entry) {
+            if (entry.isIntersecting) {
+              entry.target.classList.add('visible');
+              observer.unobserve(entry.target);
+            }
+          });
+        }, {
+          threshold: 0.1,
+          rootMargin: '0px 0px -40px 0px'
+        });
+
+        revealElements.forEach(function(el) {
+          observer.observe(el);
+        });
+      } else {
+        // Fallback: show everything
+        revealElements.forEach(function(el) {
+          el.classList.add('visible');
+        });
+      }
+    })();
+
+    // ---- Navbar scroll effect ----
+    (function() {
+      var nav = document.getElementById('nav');
+      var lastScroll = 0;
+
+      window.addEventListener('scroll', function() {
+        var currentScroll = window.pageYOffset;
+        if (currentScroll > 20) {
+          nav.classList.add('scrolled');
+        } else {
+          nav.classList.remove('scrolled');
+        }
+        lastScroll = currentScroll;
+      }, { passive: true });
+    })();
+
+    // ---- Mobile nav toggle ----
+    (function() {
+      var toggle = document.getElementById('navToggle');
+      var links = document.getElementById('navLinks');
+
+      toggle.addEventListener('click', function() {
+        links.classList.toggle('open');
+      });
+
+      // Close mobile nav when a link is clicked
+      links.querySelectorAll('a').forEach(function(link) {
+        link.addEventListener('click', function() {
+          links.classList.remove('open');
+        });
+      });
+    })();
+
+    // ---- Smooth scroll for anchor links ----
+    (function() {
+      document.querySelectorAll('a[href^="#"]').forEach(function(anchor) {
+        anchor.addEventListener('click', function(e) {
+          var targetId = this.getAttribute('href');
+          if (targetId === '#') return;
+          var target = document.querySelector(targetId);
+          if (target) {
+            e.preventDefault();
+            var navHeight = document.getElementById('nav').offsetHeight;
+            var targetPosition = target.getBoundingClientRect().top + window.pageYOffset - navHeight;
+            window.scrollTo({
+              top: targetPosition,
+              behavior: 'smooth'
+            });
+          }
+        });
+      });
+    })();
+  </script>
+
+</body>
+</html>
